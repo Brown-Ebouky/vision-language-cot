@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     --model declare-lab/flan-alpaca-base \
     --user_msg rationale --img_type vit \
     --bs 8 --eval_bs 1 --epoch 20 --lr 8e-5 --output_len 512 \
-    --use_caption --use_generate --final_eval --prompt_format QCM-E \
+    --use_caption --use_generate --final_eval --prompt_format QCMU-E \
     --output_dir experiments \
     --evaluate_dir /dccstor/niccoloav/mm-cot/experiment_qcmue/rationale_declare-lab-flan-alpaca-base_vit_QCMU-UE_lr8e-05_bs8_op512_ep20
 
