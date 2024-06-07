@@ -97,6 +97,11 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
         input = f"Question: {question}\nContext: {context}\nAnswer: The answer is {answer}. \nBECAUSE:"
     elif input_format == "QCMU":
         input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nTentative answer: The answer is {user_attempt}.\n"
+    elif input_format == "QCMUE":
+        if user_attempt == answer:
+            input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nTentative answer: The answer is {user_attempt}. The tentative answer is correct. BECAUSE: {solution}\n"
+        else:
+            input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nTentative answer: The answer is {user_attempt}. The tentative answer not is correct. BECAUSE: {solution}\n"
     elif input_format == "QCMUG":
         input = f"Question: {question}\nContext: {context}\nOptions: {choice}\nTentative answer: The answer is {user_attempt}.\n{curr_le_data}\n"
 
@@ -242,10 +247,10 @@ def build_train_pair(problems, test_qid, args, curr_le_data=None, user_attempt=N
     # create the prompt input
     prompt_input = '\n\n'.join(examples)
 
-    # print(prompt_input)
+    print(prompt_input)
     # print(target)
 
-    # assert False
+    assert False
 
     return prompt_input, target, user_attempt
 

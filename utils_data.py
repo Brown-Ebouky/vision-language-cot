@@ -74,7 +74,7 @@ class ScienceQADatasetStd(Dataset):
     """
 
     def __init__(
-        self, problems, qids, tokenizer, source_len, target_len, args, test_le=None, load_ua=None
+        self, problems, qids, tokenizer, source_len, target_len, args, test_le=None, load_ua=None, method="ua"
     ):
         self.tokenizer = tokenizer
         self.data = {qid : problems[qid] for qid in qids}
@@ -86,7 +86,7 @@ class ScienceQADatasetStd(Dataset):
         if test_le is not None:
             test_le_data =json.load(open(test_le))["preds"]
             if load_ua:
-                ua_data = json.load(open(test_le))["ua"]
+                ua_data = json.load(open(test_le))[method]
         else:
             test_le_data = None
         idx = 0
@@ -96,6 +96,8 @@ class ScienceQADatasetStd(Dataset):
                 curr_le_data = test_le_data[idx]
                 if load_ua:
                     ua = ua_data[idx]
+                    if method == "preds":
+                        ua.removeprefix("The answer is ")
                 idx += 1
             else:
                 curr_le_data = None
@@ -151,7 +153,7 @@ class ScienceQADatasetImg(Dataset):
     """
 
     def __init__(
-        self, problems, qids, name_maps, tokenizer, source_len, target_len, args, image_features, test_le=None, load_ua=None
+        self, problems, qids, name_maps, tokenizer, source_len, target_len, args, image_features, test_le=None, load_ua=None, method="ua"
     ):
         """
         Initializes a Dataset class
@@ -175,7 +177,7 @@ class ScienceQADatasetImg(Dataset):
         if test_le is not None:
             test_le_data =json.load(open(test_le))["preds"]
             if load_ua:
-                ua_data = json.load(open(test_le))["ua"]
+                ua_data = json.load(open(test_le))[method]
         else:
             test_le_data = None
         idx = 0
@@ -185,6 +187,8 @@ class ScienceQADatasetImg(Dataset):
                 curr_le_data = test_le_data[idx]
                 if load_ua:
                     ua = ua_data[idx]
+                    if method == "preds":
+                        ua.removeprefix("The answer is ")
                 idx += 1
             else:
                 curr_le_data = None

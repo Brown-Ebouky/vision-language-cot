@@ -1,23 +1,23 @@
 # base
-CUDA_VISIBLE_DEVICES=0 python main.py \
-    --data_root ScienceQA/data \
-    --caption_file data/instruct_captions.json \
-    --model declare-lab/flan-alpaca-base \
-    --user_msg rationale --img_type vit \
-    --bs 8 --eval_bs 8 --epoch 20 --lr 8e-5 --output_len 512 \
-    --use_caption --use_generate --final_eval --prompt_format QCMU-UE \
-    --output_dir experiment_qcmue
-
 # CUDA_VISIBLE_DEVICES=0 python main.py \
 #     --data_root ScienceQA/data \
 #     --caption_file data/instruct_captions.json \
 #     --model declare-lab/flan-alpaca-base \
 #     --user_msg rationale --img_type vit \
-#     --bs 8 --eval_bs 8 --epoch 20 --lr 8e-5 --output_len 64 \
-#     --use_caption --use_generate --prompt_format QCMG-A \
-#     --output_dir experiments0620 \
-#     --eval_le experiments/rationale_declare-lab-flan-alpaca-base_vit_QCM-E_lr8e-05_bs8_op512_ep20/predictions_ans_eval.json \
-#     --test_le experiments/rationale_declare-lab-flan-alpaca-base_vit_QCM-E_lr8e-05_bs8_op512_ep20/predictions_ans_test.json
+#     --bs 8 --eval_bs 8 --epoch 20 --lr 8e-5 --output_len 512 \
+#     --use_caption --use_generate --final_eval --prompt_format QCMU-UE \
+#     --output_dir experiment_qcmue
+
+CUDA_VISIBLE_DEVICES=0 python main.py \
+    --data_root ScienceQA/data \
+    --caption_file data/instruct_captions.json \
+    --model declare-lab/flan-alpaca-base \
+    --user_msg rationale --img_type vit \
+    --bs 8 --eval_bs 8 --epoch 20 --lr 8e-5 --output_len 64 \
+    --use_caption --use_generate --prompt_format QCMUE-A \
+    --output_dir experiments0620 \
+    # --eval_le experiments/rationale_declare-lab-flan-alpaca-base_vit_QCM-E_lr8e-05_bs8_op512_ep20/predictions_ans_eval.json \
+    # --test_le experiments/rationale_declare-lab-flan-alpaca-base_vit_QCM-E_lr8e-05_bs8_op512_ep20/predictions_ans_test.json
 
 # CUDA_VISIBLE_DEVICES=0 python main_central.py \
 #     --data_root data/ScienceQA/data \

@@ -47,9 +47,10 @@ def parse_args():
     parser.add_argument('--caption_file', type=str, default='data/captions.json')
     parser.add_argument('--use_caption', action='store_true', help='use image captions or not')
     parser.add_argument('--prompt_format', type=str, default='QCM-A', help='prompt format template',
-                        choices=['QCM-A', 'QCM-E', 'QCM-LE', 'QCMG-A', 'QCM-LEA', 'QCM-ALE', "QCMU-E", "QCMU-UE"])
+                        choices=['QCM-A', 'QCM-E', 'QCM-LE', 'QCMG-A', 'QCM-LEA', 'QCM-ALE', "QCMU-E", "QCMU-UE", "QCMUE-A"])
     parser.add_argument('--seed', type=int, default=42, help='random seed')
-    parser.add_argument('--load_ua', type=bool, default=False, help='wether to load ua')
+    parser.add_argument('--load_ua', action='store_true', help='wether to load ua')
+    parser.add_argument('--method', type=str, default="ua", help='whether to load ua or predictions ("preds")', choices=['ua', 'preds'])
 
     args = parser.parse_args()
     return args
@@ -109,7 +110,8 @@ def T5Trainer(
             args,
             image_features,
             args.eval_le,
-            args.load_ua
+            args.load_ua,
+            args.method
         )
         test_set = ScienceQADatasetImg(
             problems,
@@ -121,7 +123,8 @@ def T5Trainer(
             args,
             image_features,
             args.test_le,
-            args.load_ua
+            args.load_ua,
+            args.method
         )
     else:
         model = T5ForConditionalGeneration.from_pretrained(args.model) 
@@ -141,7 +144,8 @@ def T5Trainer(
             args.output_len,
             args,
             args.eval_le,
-            args.load_ua
+            args.load_ua,
+            args.method,
         )
         
         test_set = ScienceQADatasetStd(
@@ -152,7 +156,8 @@ def T5Trainer(
             args.output_len,
             args,
             args.test_le,
-            args.load_ua
+            args.load_ua,
+            args.method
         )
 
     datacollator = DataCollatorForSeq2Seq(tokenizer)
@@ -337,7 +342,7 @@ def T5Trainer(
             writer.write(json.dumps(output_data, indent=4))
     
     # generate the rationale for the eval set
-    if args.prompt_format == "QCM-LE" or args.prompt_format == "QCM-E":
+    if args.prompt_format == "QCM-LE" or args.prompt_format == "QCM-E" or args.prompt_format == "QCMU-UE":
         torch.cuda.empty_cache()
         del predict_results, preds, targets
         predict_results = trainer.predict(test_dataset=eval_set, max_length=args.output_len) 

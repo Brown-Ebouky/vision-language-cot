@@ -7,3 +7,5 @@ experiments
 models
 vision_features
 *.zip
+experiments_qmcue_preds
+experiments0620
