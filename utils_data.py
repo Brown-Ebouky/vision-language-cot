@@ -74,7 +74,7 @@ class ScienceQADatasetStd(Dataset):
     """
 
     def __init__(
-        self, problems, qids, tokenizer, source_len, target_len, args, test_le=None, load_ua=None, method="ua"
+        self, problems, qids, tokenizer, source_len, target_len, args, test_le=None, load_ua=None, method="ua", sampling_true_percentage=None
     ):
         self.tokenizer = tokenizer
         self.data = {qid : problems[qid] for qid in qids}
@@ -97,11 +97,12 @@ class ScienceQADatasetStd(Dataset):
                 if load_ua:
                     ua = ua_data[idx]
                     if method == "preds":
-                        ua.removeprefix("The answer is ")
+                        ua.replace("The answer is ", "")
+                        ua.replace(".", "")
                 idx += 1
             else:
                 curr_le_data = None
-            prompt, target, user_attempt = build_train_pair(problems, qid, args, curr_le_data, ua)
+            prompt, target, user_attempt = build_train_pair(problems, qid, args, curr_le_data, ua, sampling_true_percentage)
             self.target_text.append(target)
             self.source_text.append(prompt)
             self.user_attempt_text.append(user_attempt)
@@ -153,7 +154,7 @@ class ScienceQADatasetImg(Dataset):
     """
 
     def __init__(
-        self, problems, qids, name_maps, tokenizer, source_len, target_len, args, image_features, test_le=None, load_ua=None, method="ua"
+        self, problems, qids, name_maps, tokenizer, source_len, target_len, args, image_features, test_le=None, load_ua=None, method="ua", sampling_true_percentage=None,
     ):
         """
         Initializes a Dataset class
@@ -185,14 +186,17 @@ class ScienceQADatasetImg(Dataset):
         for qid in self.data:
             if test_le_data is not None:
                 curr_le_data = test_le_data[idx]
+                curr_le_data = curr_le_data.replace("The answer is ", "")
+                curr_le_data = curr_le_data.replace(".", "")
                 if load_ua:
                     ua = ua_data[idx]
                     if method == "preds":
-                        ua.removeprefix("The answer is ")
+                        ua = ua.replace("The answer is ", "")
+                        ua = ua.replace(".", "")
                 idx += 1
             else:
                 curr_le_data = None
-            prompt, target, user_attempt = build_train_pair(problems, qid, args, curr_le_data, ua)
+            prompt, target, user_attempt = build_train_pair(problems, qid, args, curr_le_data, ua, sampling_true_percentage)
             self.target_text.append(target)
             self.source_text.append(prompt)
             self.user_attempt_text.append(user_attempt)
@@ -202,6 +206,7 @@ class ScienceQADatasetImg(Dataset):
             else:
                 shape = img_shape[args.img_type]
                 self.image_ids.append(np.zeros(shape))
+
     
     def __len__(self):
         """returns the length of dataframe"""

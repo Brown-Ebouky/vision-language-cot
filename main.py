@@ -47,10 +47,11 @@ def parse_args():
     parser.add_argument('--caption_file', type=str, default='data/captions.json')
     parser.add_argument('--use_caption', action='store_true', help='use image captions or not')
     parser.add_argument('--prompt_format', type=str, default='QCM-A', help='prompt format template',
-                        choices=['QCM-A', 'QCM-E', 'QCM-LE', 'QCMG-A', 'QCM-LEA', 'QCM-ALE', "QCMU-E", "QCMU-UE", "QCMUE-A"])
+                        choices=['QCM-A', 'QCM-E', 'QCM-LE', 'QCMG-A', 'QCM-LEA', 'QCM-ALE', "QCMU-E", "QCMU-UE", "QCMUE-A", "QCMUG-A"])
     parser.add_argument('--seed', type=int, default=42, help='random seed')
     parser.add_argument('--load_ua', action='store_true', help='wether to load ua')
     parser.add_argument('--method', type=str, default="ua", help='whether to load ua or predictions ("preds")', choices=['ua', 'preds'])
+    parser.add_argument('--sampling_true_percentage', type=float, default=None, help='Percentage to sample',)
 
     args = parser.parse_args()
     return args
@@ -99,6 +100,7 @@ def T5Trainer(
             args.output_len,
             args,
             image_features,
+            sampling_true_percentage=args.sampling_true_percentage,
         )
         eval_set = ScienceQADatasetImg(
             problems,
@@ -135,6 +137,7 @@ def T5Trainer(
             args.input_len,
             args.output_len,
             args,
+            sampling_true_percentage=args.sampling_true_percentage,
         )
         eval_set = ScienceQADatasetStd(
             problems,
@@ -159,7 +162,7 @@ def T5Trainer(
             args.load_ua,
             args.method
         )
-
+    print("ciao")
     datacollator = DataCollatorForSeq2Seq(tokenizer)
     print("model parameters: ", model.num_parameters())
     def extract_ans(ans):
@@ -286,11 +289,11 @@ def T5Trainer(
         trainer.save_model(save_dir)
     # print("HEEEEEEYYYYYYYYY")
     # small_test = torch.utils.data.Subset(test_set, [0,1,2])
-    metrics = trainer.evaluate(eval_dataset=test_set, max_length=args.output_len)
+    # metrics = trainer.evaluate(eval_dataset=test_set, max_length=args.output_len)
     # print("I'M HERE")
-    trainer.log_metrics("test", metrics)
-    trainer.save_metrics("test", metrics)
-
+    # trainer.log_metrics("test", metrics)
+    # trainer.save_metrics("test", metrics)
+    print("I'M HERE")
     predict_results = trainer.predict(test_dataset=test_set, max_length=args.output_len) 
     if trainer.is_world_process_zero():
         if args.use_generate:

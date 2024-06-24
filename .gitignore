@@ -9,3 +9,5 @@ vision_features
 *.zip
 experiments_qmcue_preds
 experiments0620
+experiment_qcmue_80_perc
+job_out/
