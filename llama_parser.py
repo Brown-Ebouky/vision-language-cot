@@ -52,7 +52,7 @@ def extract_ans(ans):
         return answer  
 
 def main(args):
-    with open("/dccstor/niccoloav/mm-cot/llama_qcmg_a_llava_caption_qcm.json") as f:
+    with open("/dccstor/niccoloav/mm-cot/llama_qcmg_a_70b_seed_5.json") as f:
         data = json.load(f)
 
     count_parse_problems = 0
@@ -74,7 +74,11 @@ def main(args):
         ans = ans.strip()
         if len(ans) != 1:
             count_parse_problems += 1
-            ans = ans[0]
+            print(ans)
+            try:
+                ans = ans[0]
+            except:
+                print(ans)
         parsed_dict["preds"].append(f"The answer is ({ans}).")
 
     with open('/dccstor/niccoloav/mm-cot/parsed_llama_qcma.json', 'w') as f:

@@ -1,4 +1,4 @@
-python llama_parser.py \
+python llama_parser_ensemble.py \
     --data_root ScienceQA/data \
     --caption_file data/instruct_captions.json \
     --model declare-lab/flan-alpaca-base \

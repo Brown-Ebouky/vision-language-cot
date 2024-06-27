@@ -10,7 +10,6 @@ from transformers import AutoTokenizer, DataCollatorForSeq2Seq, Seq2SeqTrainingA
 from model import T5ForMultimodalGeneration
 from utils_data import img_shape, load_data_std, load_data_img, ScienceQADatasetStd, ScienceQADatasetImg, ScienceQADatasetSimple
 from utils_prompt import *
-from utils_evaluate import get_scores
 from rich.table import Column, Table
 from rich import box
 from rich.console import Console
@@ -71,6 +70,9 @@ def parse_args():
     parser.add_argument('--max_gen_len', type=int, default=512, help='max  generated sequence length')
     parser.add_argument('--max_inter_gen_len', type=int, default=512, help='max intermediate generated sequence length')
     parser.add_argument('--max_batch_size', type=int, default=6, help='max batch size')
+    parser.add_argument('--save_outputs', type=str, default="./output.json", help='output json file')
+    parser.add_argument('--temperature', type=float, default=0.6, help='max batch size')
+    parser.add_argument('--top_p', type=float, default=0.9, help='max batch size')
     
 
 
@@ -81,8 +83,6 @@ def parse_args():
 def create_llama_generator(
     ckpt_dir: str,
     tokenizer_path: str,
-    temperature: float = 0.6,
-    top_p: float = 0.9,
     max_seq_len: int = 512,
     max_batch_size: int = 4,
     max_gen_len: Optional[int] = 64,
@@ -92,6 +92,7 @@ def create_llama_generator(
         tokenizer_path=tokenizer_path,
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
+        seed=args.seed
     )
     
     return generator
@@ -102,9 +103,10 @@ def LlamaTrainer(
     temperature: float = 0.6,
     top_p: float = 0.9,
 ):
+    # print(args.seed)
     torch.manual_seed(args.seed)  # pytorch random seed
     np.random.seed(args.seed)  # numpy random seed
-    torch.backends.cudnn.deterministic = True
+    # torch.backends.cudnn.deterministic = True
     
     # if args.evaluate_dir is not None:
     #     args.model = args.evaluate_dir
@@ -180,51 +182,50 @@ def LlamaTrainer(
 
         results = llama_generator.text_completion(
             data[0],
-            max_gen_len=args.max_inter_gen_len,
-            temperature=temperature,
-            top_p=top_p,
-        )
-
-        prompt_feedback = " .Is the answer to the question correct? If not, what should describe the correct answer ?"
-        
-        ask_feedback = [data[0][i] + results[i]['generation'] + prompt_feedback for i in range(len(results))]
-        
-        inter_results = llama_generator.text_completion(
-            ask_feedback,
-            max_gen_len=args.max_inter_gen_len,
-            temperature=temperature,
-            top_p=top_p,
-        )
-        
-        prompt_final_ans = " .Considering, all these details, provide the final correct answer using the options provided in the form (A)..., (B)..., (C)... and so on . Answer : "
-        
-        ask_final_ans = [ask_feedback[i] + " " + inter_results[i]['generation'] + prompt_final_ans for i in range(len(inter_results))]
-        
-        final_results = llama_generator.text_completion(
-            ask_final_ans,
             max_gen_len=args.max_gen_len,
             temperature=temperature,
             top_p=top_p,
         )
+
+        # prompt_feedback = "Is the answer to the question correct? Please give a short feedback.\n"
+        
+        # ask_feedback = [prompt_feedback + data[0][i] + results[i]['generation'] for i in range(len(results))]
+        
+        # inter_results = llama_generator.text_completion(
+        #     ask_feedback,
+        #     max_gen_len=args.max_inter_gen_len,
+        #     temperature=temperature,
+        #     top_p=top_p,
+        # )
+        
+        # prompt_final_ans = "Considering all these details, provide the final correct answer. \n"
+
+        # prompt_final_letter =  "\nPlease give the answer only with the letter:"
+        
+        # ask_final_ans = [prompt_final_ans + data[0][i] + "\n" + results[i]['generation'] + "\n" + inter_results[i]['generation'] + prompt_final_letter for i in range(len(inter_results))]
+        
+        # final_results = llama_generator.text_completion(
+        #     ask_final_ans,
+        #     max_gen_len=args.max_gen_len,
+        #     temperature=temperature,
+        #     top_p=top_p,
+        # )
         
         
-        for prompt, result in zip(ask_final_ans, final_results):
+        for prompt, result in zip(data[0], results):
             answers.append("The answer is" + result['generation'])
             prompts.append(prompt)
             
-            print(f"Prompt: {prompt} \\")
-            print("//"*30)
-            print(f"Result: {result['generation']}\\")
-            print('----' * 30)
-            
-        break
-    
+            # print(f"Prompt: {prompt} \\")
+            # print("//"*30)
+            # print(f"Result_generation: {result['generation']}\\")
+            # print('----' * 30)
     
     pred_dict = {"preds": answers, "prompts": prompts}
 
 
     
-    with open('./llama_qcmg_a_llava_caption_qcm.json', 'w') as outfile:
+    with open(args.save_outputs, 'w') as outfile:
         json.dump(pred_dict, outfile, indent=4)
 
     
@@ -245,7 +246,7 @@ if __name__ == '__main__':
     print('====Input Arguments====')
     print(json.dumps(vars(args), indent=2, sort_keys=False))
 
-    random.seed(args.seed)
+    # random.seed(args.seed)
     
     if not os.path.exists(args.output_dir):
             os.mkdir(args.output_dir)
@@ -259,5 +260,7 @@ if __name__ == '__main__':
 
     LlamaTrainer(
         dataframe=dataframe,
-        args = args
+        args=args,
+        top_p=args.top_p,
+        temperature=args.temperature,
     )
