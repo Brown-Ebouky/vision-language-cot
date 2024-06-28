@@ -187,7 +187,6 @@ def create_one_example(format,
         text = text.replace("  ", " ").strip()
         output = output.replace("  ", " ").strip()
         return text, output
-
     text = input + output
     text = text.replace("  ", " ").strip()
     if text.endswith("BECAUSE:"):
