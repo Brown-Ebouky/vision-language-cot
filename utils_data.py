@@ -17,9 +17,15 @@ def load_data_std(args):
     problems = json.load(open(os.path.join(args.data_root, 'scienceqa/problems.json')))
     pid_splits = json.load(open(os.path.join(args.data_root, 'scienceqa/pid_splits.json')))
     captions = json.load(open(args.caption_file))["captions"]
+    # if args.load_caption is None:
+    #     captions = ["" for _ in captions]
 
+    # print(args.use_caption)
     for qid in problems:
         problems[qid]['caption'] = captions[qid] if qid in captions else ""
+
+        # # In case we dont want to use the captions
+        # problems[qid]['caption'] = problems[qid]['caption'] if args.use_caption else ""
 
     train_qids = pid_splits['%s' % (args.train_split)]
     val_qids = pid_splits['%s' % (args.val_split)]
@@ -143,6 +149,67 @@ class ScienceQADatasetStd(Dataset):
             "attention_mask": source_mask,
             "labels": target_ids,
         }
+        
+class ScienceQADatasetSimple(Dataset):
+    """
+    Creating a custom dataset for reading the dataset and
+    loading it into the dataloader to pass it to the
+    neural network for finetuning the model
+
+    """
+
+    def __init__(
+        self, problems, qids, tokenizer, source_len, target_len, args, test_le=None, load_ua=None, method="ua"
+    ):
+        self.tokenizer = tokenizer
+        self.data = {qid : problems[qid] for qid in qids}
+        self.source_len = source_len
+        self.summ_len = target_len
+        self.target_text = []
+        self.source_text = []
+        self.user_attempt_text = []
+        if test_le is not None:
+            test_le_data =json.load(open(test_le))["preds"]
+            if load_ua:
+                ua_data = json.load(open(test_le))[method]
+        else:
+            test_le_data = None
+        idx = 0
+        ua = None
+        for qid in self.data:
+            if test_le_data is not None:
+                curr_le_data = test_le_data[idx]
+                if load_ua:
+                    ua = ua_data[idx]
+                    if method == "preds":
+                        ua.removeprefix("The answer is ")
+                idx += 1
+            else:
+                curr_le_data = None
+            prompt, target, user_attempt = build_train_pair(problems, qid, args, curr_le_data, ua)
+            self.target_text.append(target)
+            self.source_text.append(prompt)
+            self.user_attempt_text.append(user_attempt)
+
+    def __len__(self):
+        return len(self.target_text)
+
+    def __getitem__(self, index):
+        source_text = str(self.source_text[index])
+        target_text = str(self.target_text[index])
+
+        # cleaning data so as to ensure data is in string type
+        source_text = " ".join(source_text.split())
+        
+        # prompt = "Instructions: Let's think step by step for each of the options, give an explanation for why it is or it is not correct. Using those explanations, provide the actual correct answer. "
+        # source_text = prompt + source_text
+        
+        # source_text = "Please provide the answer to the question only as a letter. " + source_text
+        # source_text = "Please provide the answer in the format 'The answer is: (_)'. Stop after that. " + source_text
+        target_text = " ".join(target_text.split())
+
+        
+        return (source_text, target_text)
 
 
 class ScienceQADatasetImg(Dataset):

@@ -2,9 +2,10 @@
 Adapted from https://github.com/lupantech/ScienceQA
 '''
 
+import random
 from dataclasses import dataclass
 from typing import List, Optional
-import random
+
 
 def get_question_text(problem):
     question = problem['question']
@@ -29,8 +30,10 @@ def get_choice_text(probelm, options):
     #print(choice_txt)
     return choice_txt
 
+
 def get_origin_answer(problem, options):
     return problem['choices'][problem['answer']]
+
 
 def get_answer(problem, options):
     return options[problem['answer']]
@@ -47,20 +50,33 @@ def get_solution_text(problem):
     solution = problem['solution'].replace("\n", "\\n")
     return solution
 
+
 def get_user_attempt(problem, options, percentage=None, answer=None):
     choices = problem['choices']
     choice_list = []
     for i in range(len(choices)):
         choice_list.append(f"({options[i]})")
     if percentage:
-        weights = [(1 / (len(choice_list) - 1)) * (1 - percentage) for _ in range(len(choice_list))]
+        weights = [(1 / (len(choice_list) - 1)) * (1 - percentage)
+                   for _ in range(len(choice_list))]
         weights[choice_list.index(answer)] = percentage
         example = random.choices(choice_list, weights=weights, k=1)[0]
     else:
         example = random.sample(choice_list, 1)[0]
     return example
 
-def create_one_example(format, question, context, choice, answer, lecture, solution, test_example=True, WithOutput = False, curr_le_data=None, user_attempt=None):
+
+def create_one_example(format,
+                       question,
+                       context,
+                       choice,
+                       answer,
+                       lecture,
+                       solution,
+                       test_example=True,
+                       WithOutput=False,
+                       curr_le_data=None,
+                       user_attempt=None):
 
     input_format, output_format = format.split("-")
     ## Inputs
@@ -166,12 +182,12 @@ def create_one_example(format, question, context, choice, answer, lecture, solut
             text = input + f'Answer:'
         elif output_format == "UE":
             text = input + "The tentative answer is "
-        else: 
+        else:
             text = input + f'Solution:'
         text = text.replace("  ", " ").strip()
         output = output.replace("  ", " ").strip()
         return text, output
-        
+
     text = input + output
     text = text.replace("  ", " ").strip()
     if text.endswith("BECAUSE:"):
@@ -225,7 +241,13 @@ def build_prompt(problems, shot_qids, test_qid, args):
 
     return prompt_input
 
-def build_train_pair(problems, test_qid, args, curr_le_data=None, user_attempt=None, sampling_true_percentage=None):
+
+def build_train_pair(problems,
+                     test_qid,
+                     args,
+                     curr_le_data=None,
+                     user_attempt=None,
+                     sampling_true_percentage=None):
 
     examples = []
 
@@ -239,22 +261,23 @@ def build_train_pair(problems, test_qid, args, curr_le_data=None, user_attempt=N
     answer = "(" + answer_option + ")"
     # print(f"{user_attempt=}")
     if user_attempt == None:
-        user_attempt = get_user_attempt(problems[test_qid], args.options, sampling_true_percentage, answer)
+        user_attempt = get_user_attempt(problems[test_qid], args.options,
+                                        sampling_true_percentage, answer)
 
     test_example, target = create_one_example(args.prompt_format,
-                                      question,
-                                      context,
-                                      choice,
-                                      answer,
-                                      lecture,
-                                      solution,
-                                      test_example=False,
-                                      WithOutput=True,
-                                      curr_le_data=curr_le_data, 
-                                      user_attempt=user_attempt)
+                                              question,
+                                              context,
+                                              choice,
+                                              answer,
+                                              lecture,
+                                              solution,
+                                              test_example=False,
+                                              WithOutput=True,
+                                              curr_le_data=curr_le_data,
+                                              user_attempt=user_attempt)
 
     examples.append(test_example)
-    
+
     target = target.replace("Answer:", "").strip()
     # create the prompt input
     prompt_input = '\n\n'.join(examples)
@@ -264,6 +287,7 @@ def build_train_pair(problems, test_qid, args, curr_le_data=None, user_attempt=N
     # print(f"{user_attempt=}")
     # assert False
     return prompt_input, target, user_attempt
+
 
 @dataclass(frozen=True)
 class InputFeatures:
