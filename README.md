@@ -1,1 +1,1 @@
-# vision-language-cot
+# 3ai_project -- Vision-Language CoT
